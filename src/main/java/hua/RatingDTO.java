@@ -1,6 +1,7 @@
 package hua;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 public class RatingDTO implements Serializable {
 
@@ -11,6 +12,9 @@ public class RatingDTO implements Serializable {
     private Double rating;
 
     private Long timeStamp;
+
+    public RatingDTO() {
+    }
 
     public RatingDTO(Integer userId, Integer movieId, Double rating, Long timeStamp) {
         this.userId = userId;
@@ -49,5 +53,18 @@ public class RatingDTO implements Serializable {
 
     public void setTimeStamp(Long timeStamp) {
         this.timeStamp = timeStamp;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        RatingDTO ratingDTO = (RatingDTO) o;
+        return Objects.equals(movieId, ratingDTO.movieId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(movieId);
     }
 }

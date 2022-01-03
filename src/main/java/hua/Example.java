@@ -9,6 +9,8 @@ import org.apache.spark.rdd.RDD;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
+//import static org.apache.spark.sql.functions.*;
+
 
 import java.util.Collections;
 
@@ -24,77 +26,29 @@ public class Example {
             System.exit(0);
         }
 
-//        SparkSession spark;
-//        String inputPath, outputPath;
-//        if (isLocal) {
-//            spark = SparkSession.builder().master("local").appName("Java Spark SQL example")
-//                    .getOrCreate();
-//            inputPath = "src/main/resources";
-//            outputPath = "output";
-//        } else {
-//            spark = SparkSession.builder().appName("Java Spark SQL example")
-//                    .getOrCreate();
-//            inputPath = args[0];
-//            outputPath= args[1];
-//        }
-//
-//        SparkContext sparkContext = spark.sparkContext();
-//        Dataset<String> stringDataset = spark.read().textFile(inputPath + "/movies.dat");
+        SparkSession spark;
+        String inputPath, outputPath;
+        if (isLocal) {
+            spark = SparkSession.builder().master("local").appName("Java Spark SQL example")
+                    .getOrCreate();
+            inputPath = "src/main/resources";
+            outputPath = "output";
+        } else {
+            spark = SparkSession.builder().appName("Java Spark SQL example")
+                    .getOrCreate();
+            inputPath = args[0];
+            outputPath= args[1];
+        }
 
-        String inputPath = "src/main/resources";
-        String outputPath = "output";
+        SparkContext sparkContext = spark.sparkContext();
+        Dataset<String> movies = spark.read().textFile(inputPath + "/movies.dat");
+        Dataset<String> ratings = spark.read().textFile(inputPath + "/ratings.dat");
 
-        SparkConf sparkConf = new SparkConf();
-        sparkConf.setAppName("Example");
-        sparkConf.setMaster("local[4]");
-        sparkConf.set("spark.driver.bindAddress", "127.0.0.1");
+        movies.printSchema();
+        movies.show();
 
-        JavaSparkContext spark = new JavaSparkContext(sparkConf);
+        movies.join(ratings);
 
-        JavaRDD<String> movies = spark.textFile(inputPath + "/movies.dat");
-        JavaRDD<String> ratings = spark.textFile(inputPath + "/ratings.dat");
-
-        JavaRDD<MovieDTO> splitMovies = movies.map(movie -> {
-            String[] split = movie.split("::");
-
-            return new MovieDTO(Integer.parseInt(split[0]), split[1], Collections.singletonList(split[2]));
-        });
-
-        JavaRDD<RatingDTO> splitRatings = ratings.map(rating -> {
-            String[] split = rating.split("::");
-
-            return new RatingDTO(Integer.parseInt(split[0]), Integer.parseInt(split[1]), Double.parseDouble(split[2]), Long.parseLong(split[3]));
-        });
-
-        splitMovies.foreach(e -> {
-            System.out.println(e.getTitle());
-        });
-//        System.out.println(movies);
-
-
-        // load
-//        Dataset<Row> movies = spark.read().option("header", "true").csv(inputPath+"/movies.csv");
-//        Dataset<Row> links = spark.read().option("header", "true").csv(inputPath+"/links.csv");
-//        Dataset<Row> ratings = spark.read().option("header", "true").csv(inputPath+"/ratings.csv");
-//        Dataset<Row> tags = spark.read().option("header", "true").csv(inputPath+"/tags.csv");
-
-        // schema
-        //
-        // ratings.csv   userId,movieId,rating,timestamp
-        // movies.csv    movieId,title,genres
-        // links.csv     movieId,imdbId,tmdbId
-        // tags.csv      userId,movieId,tag,timestamp
-        // print schema
-//        movies.printSchema();
-//        links.printSchema();
-//        ratings.printSchema();
-//        tags.printSchema();
-//
-//        // print some data
-//        movies.show();
-//        links.show();
-//        ratings.show();
-//        tags.show();
 
         // get all comedies
 //        Dataset<Row> allComedies = movies.filter(movies.col("genres").like("%Comedy%"));
