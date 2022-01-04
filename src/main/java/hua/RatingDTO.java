@@ -1,6 +1,7 @@
 package hua;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class RatingDTO implements Serializable {
@@ -11,16 +12,16 @@ public class RatingDTO implements Serializable {
 
     private Double rating;
 
-    private Long timeStamp;
+    private LocalDateTime timeStampParsed;
 
     public RatingDTO() {
     }
 
-    public RatingDTO(Integer userId, Integer movieId, Double rating, Long timeStamp) {
+    public RatingDTO(Integer userId, Integer movieId, Double rating, LocalDateTime timeStampParsed) {
         this.userId = userId;
         this.movieId = movieId;
         this.rating = rating;
-        this.timeStamp = timeStamp;
+        this.timeStampParsed = timeStampParsed;
     }
 
     public Integer getUserId() {
@@ -47,12 +48,12 @@ public class RatingDTO implements Serializable {
         this.rating = rating;
     }
 
-    public Long getTimeStamp() {
-        return timeStamp;
+    public LocalDateTime getTimeStampParsed() {
+        return timeStampParsed;
     }
 
-    public void setTimeStamp(Long timeStamp) {
-        this.timeStamp = timeStamp;
+    public void setTimeStampParsed(LocalDateTime timeStampParsed) {
+        this.timeStampParsed = timeStampParsed;
     }
 
     @Override
