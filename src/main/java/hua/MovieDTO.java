@@ -43,17 +43,4 @@ public class MovieDTO implements Serializable {
     public void setGenres(String genres) {
         this.genres = genres;
     }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        MovieDTO movieDTO = (MovieDTO) o;
-        return Objects.equals(movieId, movieDTO.movieId);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(movieId);
-    }
 }

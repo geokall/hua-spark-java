@@ -68,9 +68,6 @@ public class MostRatedMovies {
         //movieId, <totalCount of rating, movieTitle>
         JavaPairRDD<String, Tuple2<Integer, String>> moviesJoinedRatings = mostRatedMovies.join(movieTitle);
 
-        System.out.println("----- Top 25 rated movies by users -----");
-        System.out.println(moviesJoinedRatings.take(25));
-
         //custom pair with total rated counts and movieTitle
         //DESC order in key
         JavaPairRDD<String, String> integerStringJavaPairRDD = moviesJoinedRatings.mapToPair(joined -> {
