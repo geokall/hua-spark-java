@@ -1,4 +1,4 @@
-package hua;
+package hua.rdd;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.spark.SparkConf;

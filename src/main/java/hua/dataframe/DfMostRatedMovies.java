@@ -1,5 +1,7 @@
-package hua;
+package hua.dataframe;
 
+import hua.dto.MovieDTO;
+import hua.dto.RatingWithMonthDTO;
 import org.apache.commons.io.FileUtils;
 import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaRDD;
@@ -14,7 +16,7 @@ import java.util.TimeZone;
 import static org.apache.spark.sql.functions.*;
 
 
-public class Example {
+public class DfMostRatedMovies {
 
     public static void main(String[] args) throws Exception {
 
@@ -83,21 +85,13 @@ public class Example {
 
         Dataset<Row> movies = spark.createDataFrame(moviesRDD, MovieDTO.class);
         Dataset<Row> ratings = spark.createDataFrame(map, RatingWithMonthDTO.class);
-        Dataset <Row> joined = movies.join(ratings, movies.col("movieId").equalTo(ratings.col("movieId")));
 
-//        SELECT title
-//        FROM movie m
-//        JOIN (
-//                SELECT movieid, COUNT(movieid)
-//                FROM ratings GROUP BY movieid)
-//        ON m.movieid = r.movieid
-//        LIMIT 10
-        Dataset<Row> agg = movies.join(ratings, movies.col("movieId").equalTo(ratings.col("movieId")))
+        Dataset<Row> mostRatedMovies = movies.join(ratings, movies.col("movieId").equalTo(ratings.col("movieId")))
                 .groupBy(ratings.col("movieId"))
                 .agg(count(ratings.col("rating")))
-                .orderBy(org.apache.spark.sql.functions.col("count(rating)").desc());
-        Dataset<Row> limit = agg.limit(10);
-        limit.show();
+                .orderBy(org.apache.spark.sql.functions.col("count(rating)").desc()).limit(25);
+
+        mostRatedMovies.show();
 
 
         // get all comedies
