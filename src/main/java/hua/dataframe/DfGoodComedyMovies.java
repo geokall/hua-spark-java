@@ -3,7 +3,6 @@ package hua.dataframe;
 import hua.dto.MovieDTO;
 import hua.dto.RatingWithMonthDTO;
 import org.apache.commons.io.FileUtils;
-import org.apache.spark.SparkContext;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -14,14 +13,14 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.TimeZone;
 
-import static org.apache.spark.sql.functions.col;
-import static org.apache.spark.sql.functions.count;
+import static org.apache.spark.sql.functions.*;
 
 public class DfGoodComedyMovies {
 
     public static void main(String[] args) throws Exception {
 
         boolean isLocal = false;
+
         if (args.length == 0) {
             isLocal = true;
         } else if (args.length < 2) {
@@ -31,6 +30,7 @@ public class DfGoodComedyMovies {
 
         SparkSession spark;
         String inputPath, outputPath;
+
         if (isLocal) {
             spark = SparkSession.builder().master("local[4]")
                     .appName("Java Spark SQL example")
@@ -41,10 +41,8 @@ public class DfGoodComedyMovies {
             spark = SparkSession.builder().appName("Java Spark SQL example")
                     .getOrCreate();
             inputPath = args[0];
-            outputPath= args[1];
+            outputPath = args[1];
         }
-
-        SparkContext sparkContext = spark.sparkContext();
 
         FileUtils.deleteDirectory(new File("output"));
 
@@ -83,32 +81,21 @@ public class DfGoodComedyMovies {
             return ratingDTO;
         });
 
-
         Dataset<Row> movies = spark.createDataFrame(moviesRDD, MovieDTO.class);
         Dataset<Row> ratings = spark.createDataFrame(map, RatingWithMonthDTO.class);
 
-        Dataset<Row> mostRatedMovies = movies.join(ratings, movies.col("movieId").equalTo(ratings.col("movieId")))
-                .groupBy(ratings.col("movieId"))
-                .agg(count(ratings.col("rating")))
-                .orderBy(col("count(rating)").desc()).limit(25);
+        Dataset<Row> allComedies = movies.filter(movies.col("genres").like("%Comedy%"));
 
-        mostRatedMovies.show();
+        //in order to select, we need to add in the groupBy the column we want to keep
+        Dataset<Row> goodComedyMovies = allComedies
+                .join(ratings, allComedies.col("movieId").equalTo(ratings.col("movieId")))
+                .filter(ratings.col("rating").geq(3))
+                .groupBy(ratings.col("userId"), col("title")).count()
+                .select("title").distinct();
 
-        // get all comedies
-//        Dataset<Row> allComedies = movies.filter(movies.col("genres").like("%Comedy%"));
-//        allComedies.show();
-//        allComedies.write().format("json").save(outputPath+"/all-comedies");
-//
-//        // TODO: count all comedies that a user rates at least 3.0
-//        //       (join ratings with movies, filter by rating, groupby userid and
-//        //        aggregate count)
-//        Dataset<Row> goodComediesPerUser = /*???*/null/*???*/;
-//
-//        goodComediesPerUser.show();
-//        goodComediesPerUser.write().format("json").save(outputPath+"/good-comedies-per-user");
 
+        goodComedyMovies.write().format("json").save(outputPath);
 
         spark.close();
-
     }
 }
