@@ -86,9 +86,11 @@ public class DfMostRatedMovies {
         Dataset<Row> ratings = spark.createDataFrame(map, RatingWithMonthDTO.class);
 
         Dataset<Row> mostRatedMovies = movies.join(ratings, movies.col("movieId").equalTo(ratings.col("movieId")))
-                .groupBy(ratings.col("movieId"))
+                .groupBy(ratings.col("movieId"), movies.col("title"))
                 .agg(count(ratings.col("rating")))
-                .orderBy(col("count(rating)").desc()).limit(25);
+                .orderBy(col("count(rating)").desc())
+                .select("title")
+                .limit(25);
 
         mostRatedMovies.show();
         mostRatedMovies.write().format("json").save(outputPath);
