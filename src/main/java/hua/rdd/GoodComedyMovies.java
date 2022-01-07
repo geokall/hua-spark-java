@@ -73,14 +73,15 @@ public class GoodComedyMovies {
             return new Tuple2<>(Integer.parseInt(split[1]), ratingDTO);
         });
 
-        JavaPairRDD<Integer, Tuple2<MovieDTO, RatingDTO>> join = movieDTOJavaPairRDD.join(ratingDTOJavaPairRDD);
+        JavaPairRDD<Integer, MovieDTO> comedyMovies = movieDTOJavaPairRDD.filter(x -> x._2.getGenres().contains(COMEDY_GENRE));
 
-        //at least 1 user rates a comedy movie with >= 3
-        JavaRDD<String> filteredComedyMovies = join.filter(both -> {
-            return both._2._2.getRating() >= 3 && both._2._1.getGenres().contains(COMEDY_GENRE);
-        }).map(goodComedy -> goodComedy._2._1.getTitle()).distinct();
+        JavaPairRDD<Integer, RatingDTO> filteredRatings = ratingDTOJavaPairRDD.filter(x -> x._2.getRating() >= 3);
 
-        filteredComedyMovies.saveAsTextFile(outputPath);
+        JavaPairRDD<Integer, Tuple2<MovieDTO, RatingDTO>> join = comedyMovies.join(filteredRatings);
+
+        JavaRDD<String> goodComedyMovies = join.map(x -> x._2._1.getTitle()).distinct();
+
+        goodComedyMovies.saveAsTextFile(outputPath);
 
         spark.stop();
     }

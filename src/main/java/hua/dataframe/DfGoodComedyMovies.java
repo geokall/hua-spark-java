@@ -85,12 +85,11 @@ public class DfGoodComedyMovies {
         Dataset<Row> ratings = spark.createDataFrame(map, RatingWithMonthDTO.class);
 
         Dataset<Row> allComedies = movies.filter(movies.col("genres").like("%Comedy%"));
+        Dataset<Row> filteredRatings = ratings.filter(ratings.col("rating").geq(3));
 
         //in order to select, we need to add in the groupBy the column we want to keep
         Dataset<Row> goodComedyMovies = allComedies
-                .join(ratings, allComedies.col("movieId").equalTo(ratings.col("movieId")))
-                .filter(ratings.col("rating").geq(3))
-                .groupBy(ratings.col("userId"), col("title")).count()
+                .join(filteredRatings, allComedies.col("movieId").equalTo(filteredRatings.col("movieId")))
                 .select("title").distinct();
 
         goodComedyMovies.write().format("json").save(outputPath);
