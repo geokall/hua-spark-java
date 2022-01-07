@@ -35,12 +35,11 @@ public class MostRatedMovies {
 
         FileUtils.deleteDirectory(new File("output"));
 
-        JavaRDD<String> moviesTextFile = spark.textFile(inputPath + "/movies.dat");
-        JavaRDD<String> ratingsTextFile = spark.textFile(inputPath + "/ratings.dat");
+        JavaRDD<String> movies = spark.textFile(inputPath + "/movies.dat");
+        JavaRDD<String> ratings = spark.textFile(inputPath + "/ratings.dat");
 
         //movieId from rating
-        JavaRDD<String> movieIdFromRating = ratingsTextFile
-                .flatMap(line -> Collections.singletonList(line.split("::")[1]).iterator());
+        JavaRDD<String> movieIdFromRating = ratings.flatMap(line -> Collections.singletonList(line.split("::")[1]).iterator());
 
         //movieId, 1
         JavaPairRDD<String, Integer> moviesPairedWithOne = movieIdFromRating.mapToPair(movieId -> new Tuple2<>(movieId, 1));
@@ -62,7 +61,7 @@ public class MostRatedMovies {
         JavaPairRDD<String, Integer> mostRatedMovies = spark.parallelizePairs(sortedMoviesToCountMostRated.take(25));
 
         // movieId, movieTitle --> movieId as string in order to join with mostRatedMovies
-        JavaPairRDD<String, String> movieTitle = moviesTextFile.mapToPair(line -> {
+        JavaPairRDD<String, String> movieTitle = movies.mapToPair(line -> {
             return new Tuple2<>(line.split("::")[0], line.split("::")[1]);
         });
 
@@ -71,11 +70,11 @@ public class MostRatedMovies {
 
         //custom pair with total rated counts and movieTitle
         //DESC order in key
-        JavaPairRDD<String, String> integerStringJavaPairRDD = moviesJoinedRatings.mapToPair(joined -> {
+        JavaPairRDD<String, String> customMostRatedMovies = moviesJoinedRatings.mapToPair(joined -> {
             return new Tuple2<>("times rated: " + joined._2._1, " movieTitle: " + joined._2._2);
         }).sortByKey(false);
 
-        integerStringJavaPairRDD.saveAsTextFile(outputPath);
+        customMostRatedMovies.saveAsTextFile(outputPath);
 
         spark.stop();
     }

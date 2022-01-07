@@ -75,9 +75,9 @@ public class GoodComedyMovies {
 
         JavaPairRDD<Integer, MovieDTO> comedyMovies = movieDTOJavaPairRDD.filter(x -> x._2.getGenres().contains(COMEDY_GENRE));
 
-        JavaPairRDD<Integer, RatingDTO> filteredRatings = ratingDTOJavaPairRDD.filter(x -> x._2.getRating() >= 3);
+        JavaPairRDD<Integer, RatingDTO> goodRatings = ratingDTOJavaPairRDD.filter(x -> x._2.getRating() >= 3);
 
-        JavaPairRDD<Integer, Tuple2<MovieDTO, RatingDTO>> join = comedyMovies.join(filteredRatings);
+        JavaPairRDD<Integer, Tuple2<MovieDTO, RatingDTO>> join = comedyMovies.join(goodRatings);
 
         JavaRDD<String> goodComedyMovies = join.map(x -> x._2._1.getTitle()).distinct();
 

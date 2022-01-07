@@ -13,8 +13,6 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.TimeZone;
 
-import static org.apache.spark.sql.functions.*;
-
 public class DfGoodComedyMovies {
 
     public static void main(String[] args) throws Exception {
@@ -61,35 +59,37 @@ public class DfGoodComedyMovies {
                     return movieDTO;
                 });
 
-        Dataset<String> stringDataset = spark.read().textFile(inputPath + "/ratings.dat");
 
-        JavaRDD<RatingWithMonthDTO> map = stringDataset.javaRDD().map(line -> {
-            String[] parts = line.split("::");
+        JavaRDD<RatingWithMonthDTO> ratingsRDD = spark.read()
+                .textFile(inputPath + "/ratings.dat")
+                .javaRDD()
+                .map(line -> {
+                    String[] parts = line.split("::");
 
-            RatingWithMonthDTO ratingDTO = new RatingWithMonthDTO();
-            ratingDTO.setUserId(Integer.parseInt(parts[0]));
-            ratingDTO.setMovieId(Integer.parseInt(parts[1]));
-            ratingDTO.setRating(Double.parseDouble(parts[2]));
+                    RatingWithMonthDTO ratingDTO = new RatingWithMonthDTO();
+                    ratingDTO.setUserId(Integer.parseInt(parts[0]));
+                    ratingDTO.setMovieId(Integer.parseInt(parts[1]));
+                    ratingDTO.setRating(Double.parseDouble(parts[2]));
 
-            LocalDateTime timeStampAsLDT = LocalDateTime.ofInstant(Instant.ofEpochSecond(Long.parseLong(parts[3])),
-                    TimeZone.getDefault().toZoneId());
+                    LocalDateTime timeStampAsLDT = LocalDateTime.ofInstant(Instant.ofEpochSecond(Long.parseLong(parts[3])),
+                            TimeZone.getDefault().toZoneId());
 
-            int month = timeStampAsLDT.getMonth().getValue();
+                    int month = timeStampAsLDT.getMonth().getValue();
 
-            ratingDTO.setMonth(month);
+                    ratingDTO.setMonth(month);
 
-            return ratingDTO;
-        });
+                    return ratingDTO;
+                });
 
         Dataset<Row> movies = spark.createDataFrame(moviesRDD, MovieDTO.class);
-        Dataset<Row> ratings = spark.createDataFrame(map, RatingWithMonthDTO.class);
+        Dataset<Row> ratings = spark.createDataFrame(ratingsRDD, RatingWithMonthDTO.class);
 
-        Dataset<Row> allComedies = movies.filter(movies.col("genres").like("%Comedy%"));
-        Dataset<Row> filteredRatings = ratings.filter(ratings.col("rating").geq(3));
+        Dataset<Row> comedyMovies = movies.filter(movies.col("genres").like("%Comedy%"));
+        Dataset<Row> goodRatings = ratings.filter(ratings.col("rating").geq(3));
 
         //in order to select, we need to add in the groupBy the column we want to keep
-        Dataset<Row> goodComedyMovies = allComedies
-                .join(filteredRatings, allComedies.col("movieId").equalTo(filteredRatings.col("movieId")))
+        Dataset<Row> goodComedyMovies = comedyMovies
+                .join(goodRatings, comedyMovies.col("movieId").equalTo(goodRatings.col("movieId")))
                 .select("title").distinct();
 
         goodComedyMovies.write().format("json").save(outputPath);

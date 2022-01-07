@@ -110,12 +110,12 @@ public class TopRomanticMovies {
         });
 
         //sumRating, title
-        JavaPairRDD<Double, String> toSort = titleSumRating.mapToPair(Tuple2::swap);
+        JavaPairRDD<Double, String> sumRatingTitle = titleSumRating.mapToPair(Tuple2::swap);
 
         //DESC order on sumRating
-        JavaPairRDD<Double, String> doubleStringJavaPairRDD = toSort.sortByKey(false);
+        JavaPairRDD<Double, String> sortedSumRating = sumRatingTitle.sortByKey(false);
 
-        JavaPairRDD<Double, String> topRomanticMoviesBasedOnDecemberRating = spark.parallelizePairs(doubleStringJavaPairRDD.take(10));
+        JavaPairRDD<Double, String> topRomanticMoviesBasedOnDecemberRating = spark.parallelizePairs(sortedSumRating.take(10));
 
         topRomanticMoviesBasedOnDecemberRating.saveAsTextFile(outputPath);
 
