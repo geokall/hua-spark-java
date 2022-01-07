@@ -47,7 +47,6 @@ public class DfMostRatedMovies {
 
         FileUtils.deleteDirectory(new File("output"));
 
-        //creating column names based on split
         JavaRDD<MovieDTO> moviesRDD = spark.read()
                 .textFile(inputPath + "/movies.dat")
                 .javaRDD()
@@ -62,28 +61,28 @@ public class DfMostRatedMovies {
                     return movieDTO;
                 });
 
-        Dataset<String> stringDataset = spark.read().textFile(inputPath + "/ratings.dat");
+        JavaRDD<RatingWithMonthDTO> ratingsRDD = spark.read()
+                .textFile(inputPath + "/ratings.dat")
+                .javaRDD().map(line -> {
+                    String[] parts = line.split("::");
 
-        JavaRDD<RatingWithMonthDTO> map = stringDataset.javaRDD().map(line -> {
-            String[] parts = line.split("::");
+                    RatingWithMonthDTO ratingDTO = new RatingWithMonthDTO();
+                    ratingDTO.setUserId(Integer.parseInt(parts[0]));
+                    ratingDTO.setMovieId(Integer.parseInt(parts[1]));
+                    ratingDTO.setRating(Double.parseDouble(parts[2]));
 
-            RatingWithMonthDTO ratingDTO = new RatingWithMonthDTO();
-            ratingDTO.setUserId(Integer.parseInt(parts[0]));
-            ratingDTO.setMovieId(Integer.parseInt(parts[1]));
-            ratingDTO.setRating(Double.parseDouble(parts[2]));
+                    LocalDateTime timeStampAsLDT = LocalDateTime.ofInstant(Instant.ofEpochSecond(Long.parseLong(parts[3])),
+                            TimeZone.getDefault().toZoneId());
 
-            LocalDateTime timeStampAsLDT = LocalDateTime.ofInstant(Instant.ofEpochSecond(Long.parseLong(parts[3])),
-                    TimeZone.getDefault().toZoneId());
+                    int month = timeStampAsLDT.getMonth().getValue();
 
-            int month = timeStampAsLDT.getMonth().getValue();
+                    ratingDTO.setMonth(month);
 
-            ratingDTO.setMonth(month);
-
-            return ratingDTO;
-        });
+                    return ratingDTO;
+                });
 
         Dataset<Row> movies = spark.createDataFrame(moviesRDD, MovieDTO.class);
-        Dataset<Row> ratings = spark.createDataFrame(map, RatingWithMonthDTO.class);
+        Dataset<Row> ratings = spark.createDataFrame(ratingsRDD, RatingWithMonthDTO.class);
 
         Dataset<Row> mostRatedMovies = movies.join(ratings, movies.col("movieId").equalTo(ratings.col("movieId")))
                 .groupBy(ratings.col("movieId"), movies.col("title"))
@@ -92,7 +91,6 @@ public class DfMostRatedMovies {
                 .select("title")
                 .limit(25);
 
-        mostRatedMovies.show();
         mostRatedMovies.write().format("json").save(outputPath);
 
         spark.close();
