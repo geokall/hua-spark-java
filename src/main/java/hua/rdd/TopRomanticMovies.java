@@ -13,7 +13,8 @@ import scala.Tuple2;
 import java.io.File;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.TimeZone;
+import java.util.*;
+
 
 public class TopRomanticMovies {
 
@@ -73,43 +74,50 @@ public class TopRomanticMovies {
             return new Tuple2<>(Integer.parseInt(split[1]), ratingDTO);
         });
 
-        JavaPairRDD<Integer, Tuple2<RatingDTO, MovieDTO>> join = ratingDTOJavaPairRDD.join(movieDTOJavaPairRDD);
-
         //Romance movies
-        JavaPairRDD<Integer, Tuple2<RatingDTO, MovieDTO>> romance = join.filter(both -> {
-            return both._2._2.getGenres().contains(ROMANCE_GENRE);
+        JavaPairRDD<Integer, MovieDTO> romanceMovies = movieDTOJavaPairRDD.filter(moviePair -> {
+            return moviePair._2.getGenres().contains(ROMANCE_GENRE);
         });
 
-        //ratings on december
-        JavaPairRDD<Integer, Tuple2<RatingDTO, MovieDTO>> decemberRatings = romance.filter(tuple -> {
-            return tuple._2._1.getTimeStampParsed().getMonth().getValue() == 12;
+        //December ratings
+        JavaPairRDD<Integer, RatingDTO> decemberRatings = ratingDTOJavaPairRDD.filter(ratingPair -> {
+            return ratingPair._2.getTimeStampParsed().getMonth().getValue() == 12;
         });
+
+        //movieId, join
+        JavaPairRDD<Integer, Tuple2<RatingDTO, MovieDTO>> join = decemberRatings.join(romanceMovies);
 
         //grouped by movieId on rating dataset
-        JavaPairRDD<Integer, Iterable<Tuple2<Integer, Tuple2<RatingDTO, MovieDTO>>>> grouped = decemberRatings.groupBy(tuple -> tuple._2._1.getMovieId());
+        JavaPairRDD<Integer, Iterable<Tuple2<RatingDTO, MovieDTO>>> grouped = join.groupByKey();
 
-        //movieId, sumRating
-        JavaPairRDD<Integer, Double> tupleOfMovieIdAndSumRating = grouped.mapToPair(group -> {
+        //movieId, sum rating
+        JavaPairRDD<Integer, Double> pairOfMovieIdAndSumRating = grouped.mapToPair(group -> {
             double sumRating = 0;
 
-            for (Tuple2<Integer, Tuple2<RatingDTO, MovieDTO>> tuple : group._2) {
-                Double rating = tuple._2._1.getRating();
-                sumRating += rating;
+            for (Tuple2<RatingDTO, MovieDTO> ratingDTOMovieDTOTuple2 : group._2) {
+                sumRating = sumRating + ratingDTOMovieDTOTuple2._1.getRating();
             }
 
             return new Tuple2<>(group._1, sumRating);
         });
 
-        //sumRating, movieId
-        JavaPairRDD<Double, Integer> swap = tupleOfMovieIdAndSumRating.mapToPair(Tuple2::swap);
+        //to retrieve title information
+        JavaPairRDD<Integer, Tuple2<Double, MovieDTO>> joined = pairOfMovieIdAndSumRating.join(romanceMovies);
+
+        //title, sumRating
+        JavaPairRDD<String, Double> titleSumRating = joined.mapToPair(both -> {
+            return new Tuple2<>(both._2._2.getTitle(), both._2._1);
+        });
+
+        //sumRating, title
+        JavaPairRDD<Double, String> toSort = titleSumRating.mapToPair(Tuple2::swap);
 
         //DESC order on sumRating
-        JavaPairRDD<Double, Integer> sortedSumRating = swap.sortByKey(false);
+        JavaPairRDD<Double, String> doubleStringJavaPairRDD = toSort.sortByKey(false);
 
-        //list to JavaPairRDD
-        JavaPairRDD<Double, Integer> mostRatedRomanceMovies = spark.parallelizePairs(sortedSumRating.take(10));
+        JavaPairRDD<Double, String> topRomanticMoviesBasedOnDecemberRating = spark.parallelizePairs(doubleStringJavaPairRDD.take(10));
 
-        mostRatedRomanceMovies.saveAsTextFile(outputPath);
+        topRomanticMoviesBasedOnDecemberRating.saveAsTextFile(outputPath);
 
         spark.stop();
     }

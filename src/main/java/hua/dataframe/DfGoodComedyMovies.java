@@ -32,7 +32,7 @@ public class DfGoodComedyMovies {
         String inputPath, outputPath;
 
         if (isLocal) {
-            spark = SparkSession.builder().master("local[4]")
+            spark = SparkSession.builder().master("local")
                     .appName("Java Spark SQL example")
                     .getOrCreate();
             inputPath = "src/main/resources";
@@ -92,7 +92,6 @@ public class DfGoodComedyMovies {
                 .filter(ratings.col("rating").geq(3))
                 .groupBy(ratings.col("userId"), col("title")).count()
                 .select("title").distinct();
-
 
         goodComedyMovies.write().format("json").save(outputPath);
 

@@ -33,7 +33,7 @@ public class DfMostRatedMovies {
         String inputPath, outputPath;
 
         if (isLocal) {
-            spark = SparkSession.builder().master("local[4]")
+            spark = SparkSession.builder().master("local")
                     .appName("Java Spark SQL example")
                     .getOrCreate();
             inputPath = "src/main/resources";

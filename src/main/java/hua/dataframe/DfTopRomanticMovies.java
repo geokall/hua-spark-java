@@ -32,7 +32,7 @@ public class DfTopRomanticMovies {
         String inputPath, outputPath;
 
         if (isLocal) {
-            spark = SparkSession.builder().master("local[4]")
+            spark = SparkSession.builder().master("local")
                     .appName("Java Spark SQL example")
                     .getOrCreate();
             inputPath = "src/main/resources";
@@ -63,7 +63,7 @@ public class DfTopRomanticMovies {
 
         Dataset<String> stringDataset = spark.read().textFile(inputPath + "/ratings.dat");
 
-        JavaRDD<RatingWithMonthDTO> map = stringDataset.javaRDD().map(line -> {
+        JavaRDD<RatingWithMonthDTO> ratingsRDD = stringDataset.javaRDD().map(line -> {
             String[] parts = line.split("::");
 
             RatingWithMonthDTO ratingDTO = new RatingWithMonthDTO();
@@ -82,21 +82,20 @@ public class DfTopRomanticMovies {
         });
 
         Dataset<Row> movies = spark.createDataFrame(moviesRDD, MovieDTO.class);
-        Dataset<Row> ratings = spark.createDataFrame(map, RatingWithMonthDTO.class);
+        Dataset<Row> ratings = spark.createDataFrame(ratingsRDD, RatingWithMonthDTO.class);
 
-        Dataset<Row> allRomance = movies.filter(movies.col("genres").like("%Romance%"));
+        Dataset<Row> romanceMovies = movies.filter(movies.col("genres").like("%Romance%"));
+        Dataset<Row> decemberRatings = ratings.filter(ratings.col("month").equalTo(12));
 
+        Dataset<Row> topRomanticMoviesBasedOnDecemberRating = romanceMovies
+                .join(decemberRatings, romanceMovies.col("movieId").equalTo(decemberRatings.col("movieId")))
+                .groupBy(decemberRatings.col("movieId"), romanceMovies.col("title"))
+                .agg(sum("rating"))
+                .orderBy(col("sum(rating)").desc())
+                .select("title", "sum(rating)")
+                .limit(10);
 
-        //Βρείτε τις top 10 ρομαντικές ταινίες όσο αφορά το rating τον Δεκέμβριο
-        Dataset<Row> romance = allRomance
-                .join(ratings, allRomance.col("movieId").equalTo(ratings.col("movieId")))
-                .filter(ratings.col("month").equalTo(12))
-                .groupBy(ratings.col("movieId"))
-                .agg(count(ratings.col("rating")))
-                .orderBy(col("count(rating)").desc()).limit(10);
-
-
-        romance.write().format("json").save(outputPath);
+        topRomanticMoviesBasedOnDecemberRating.write().format("json").save(outputPath);
 
         spark.close();
     }
