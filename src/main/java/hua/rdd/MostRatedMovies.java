@@ -8,7 +8,7 @@ import org.apache.spark.api.java.JavaSparkContext;
 import scala.Tuple2;
 
 import java.io.File;
-import java.util.Arrays;
+import java.util.Collections;
 
 public class MostRatedMovies {
 
@@ -39,7 +39,8 @@ public class MostRatedMovies {
         JavaRDD<String> ratingsTextFile = spark.textFile(inputPath + "/ratings.dat");
 
         //movieId from rating
-        JavaRDD<String> movieIdFromRating = ratingsTextFile.flatMap(line -> Arrays.asList(line.split("::")[1]).iterator());
+        JavaRDD<String> movieIdFromRating = ratingsTextFile
+                .flatMap(line -> Collections.singletonList(line.split("::")[1]).iterator());
 
         //movieId, 1
         JavaPairRDD<String, Integer> moviesPairedWithOne = movieIdFromRating.mapToPair(movieId -> new Tuple2<>(movieId, 1));
@@ -73,10 +74,6 @@ public class MostRatedMovies {
         JavaPairRDD<String, String> integerStringJavaPairRDD = moviesJoinedRatings.mapToPair(joined -> {
             return new Tuple2<>("times rated: " + joined._2._1, " movieTitle: " + joined._2._2);
         }).sortByKey(false);
-
-//        for (Tuple2<String, Tuple2<Integer, String>> wordToCount : moviesJoinedRatings.collect()) {
-//            System.out.println(wordToCount._1() + " : " + wordToCount._2());
-//        }
 
         integerStringJavaPairRDD.saveAsTextFile(outputPath);
 
