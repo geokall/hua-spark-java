@@ -71,12 +71,13 @@ public class DfGoodComedyMovies {
         Dataset<Row> comedyMovies = moviesDataset.filter(moviesDataset.col("genres").like("%Comedy%"));
         Dataset<Row> goodRatings = ratingsDataset.filter(ratingsDataset.col("rating").geq(3));
 
-        //in order to select, we need to add in the groupBy the column we want to keep
         Dataset<Row> goodComedyMovies = comedyMovies
                 .join(goodRatings, comedyMovies.col("movieId").equalTo(goodRatings.col("movieId")))
                 .select(countDistinct("title"));
 
-        goodComedyMovies.write().format("json").save(outputPath);
+        Dataset<Row> totalGoodComedyMovies = goodComedyMovies.withColumnRenamed("count(DISTINCT title)", "totalGoodComedyMovies");
+
+        totalGoodComedyMovies.write().format("json").save(outputPath);
 
         spark.close();
     }
