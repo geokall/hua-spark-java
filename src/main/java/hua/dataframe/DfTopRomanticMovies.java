@@ -19,36 +19,22 @@ public class DfTopRomanticMovies {
 
     public static void main(String[] args) throws Exception {
 
-        boolean isLocal = false;
-
-        if (args.length == 0) {
-            isLocal = true;
-        } else if (args.length < 2) {
-            System.out.println("Usage: Example input-path output-path");
+        if (args.length < 3) {
+            System.out.println("Usage: DfTopRomanticMovies input-path output-path");
             System.exit(0);
         }
 
-        SparkSession spark;
-        String inputPath, outputPath;
+        SparkSession spark = SparkSession.builder().appName("DfTopRomanticMovies")
+                .getOrCreate();
 
-        if (isLocal) {
-            spark = SparkSession.builder().master("local")
-                    .appName("Java Spark SQL example")
-                    .getOrCreate();
-            inputPath = "src/main/resources";
-            outputPath = "output";
-        } else {
-            spark = SparkSession.builder().appName("Java Spark SQL example")
-                    .getOrCreate();
-            inputPath = args[0];
-            outputPath = args[1];
-        }
+        String movies = args[0];
+        String ratings = args[1];
 
-        FileUtils.deleteDirectory(new File("output"));
+        String outputPath = args[2];
 
         //creating column names based on split
         JavaRDD<MovieDTO> moviesRDD = spark.read()
-                .textFile(inputPath + "/movies.dat")
+                .textFile(movies)
                 .javaRDD()
                 .map(line -> {
                     String[] parts = line.split("::");
@@ -62,7 +48,7 @@ public class DfTopRomanticMovies {
                 });
 
         JavaRDD<RatingDTO> ratingsRDD = spark.read()
-                .textFile(inputPath + "/ratings.dat")
+                .textFile(ratings)
                 .javaRDD()
                 .map(line -> {
                     String[] parts = line.split("::");
@@ -82,14 +68,11 @@ public class DfTopRomanticMovies {
                     return ratingDTO;
                 });
 
-        Dataset<Row> movies = spark.createDataFrame(moviesRDD, MovieDTO.class);
-        Dataset<Row> ratings = spark.createDataFrame(ratingsRDD, RatingDTO.class);
+        Dataset<Row> moviesDataset = spark.createDataFrame(moviesRDD, MovieDTO.class);
+        Dataset<Row> ratingsDataset = spark.createDataFrame(ratingsRDD, RatingDTO.class);
 
-        Dataset<Row> romanceMovies = movies.filter(movies.col("genres").like("%Romance%"));
-        Dataset<Row> decemberRatings = ratings.filter(ratings.col("month").equalTo(12));
-
-        System.out.println("c1:" + romanceMovies.count());
-        System.out.println("c2:" + decemberRatings.count());
+        Dataset<Row> romanceMovies = moviesDataset.filter(moviesDataset.col("genres").like("%Romance%"));
+        Dataset<Row> decemberRatings = ratingsDataset.filter(ratingsDataset.col("month").equalTo(12));
 
         Dataset<Row> topRomanticMoviesBasedOnDecemberRating = romanceMovies
                 .join(decemberRatings, romanceMovies.col("movieId").equalTo(decemberRatings.col("movieId")))
