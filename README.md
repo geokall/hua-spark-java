@@ -57,6 +57,10 @@ In case you need to remove an output folder please use, <br />
 hadoop/bin/hadoop fs -rm -r "output-folder"
 ```
 
+## Caching
+We did not apply any caching, since every query has its own Class.
+If We had to use every part in one Class, We should have cached the inner join between movieId from movies and ratings dataset.
+
 ## Proof it works
 ## Part 1 RDD
 Top 25 most rated movies
