@@ -1,4 +1,4 @@
-# Συστήματα Διαχείρισης Δεδομένων Μεγάλης Κλίμακας
+# Large Scale Data Management Systems
 
 ## Setup
 In order to be able to use Spark easily, inside the hua-spark project there is a Vagrant script.<br />
