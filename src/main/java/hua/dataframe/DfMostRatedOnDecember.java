@@ -2,13 +2,11 @@ package hua.dataframe;
 
 import hua.dto.MovieDTO;
 import hua.dto.RatingDTO;
-import org.apache.commons.io.FileUtils;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 
-import java.io.File;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.TimeZone;
@@ -19,35 +17,21 @@ public class DfMostRatedOnDecember {
 
     public static void main(String[] args) throws Exception {
 
-        boolean isLocal = false;
-
-        if (args.length == 0) {
-            isLocal = true;
-        } else if (args.length < 2) {
-            System.out.println("Usage: Example input-path output-path");
+        if (args.length < 3) {
+            System.out.println("Usage: DfMostRatedOnDecember input-path output-path");
             System.exit(0);
         }
 
-        SparkSession spark;
-        String inputPath, outputPath;
+        SparkSession spark = SparkSession.builder().appName("DfMostRatedOnDecember")
+                .getOrCreate();
 
-        if (isLocal) {
-            spark = SparkSession.builder().master("local")
-                    .appName("Java Spark SQL example")
-                    .getOrCreate();
-            inputPath = "src/main/resources";
-            outputPath = "output";
-        } else {
-            spark = SparkSession.builder().appName("Java Spark SQL example")
-                    .getOrCreate();
-            inputPath = args[0];
-            outputPath = args[1];
-        }
+        String movies = args[0];
+        String ratings = args[1];
 
-        FileUtils.deleteDirectory(new File("output"));
+        String outputPath = args[2];
 
         JavaRDD<MovieDTO> moviesRDD = spark.read()
-                .textFile(inputPath + "/movies.dat")
+                .textFile(movies)
                 .javaRDD()
                 .map(line -> {
                     String[] parts = line.split("::");
@@ -61,7 +45,7 @@ public class DfMostRatedOnDecember {
                 });
 
         JavaRDD<RatingDTO> ratingsRDD = spark.read()
-                .textFile(inputPath + "/ratings.dat")
+                .textFile(ratings)
                 .javaRDD()
                 .map(line -> {
                     String[] parts = line.split("::");
@@ -81,16 +65,16 @@ public class DfMostRatedOnDecember {
                     return ratingDTO;
                 });
 
-        Dataset<Row> movies = spark.createDataFrame(moviesRDD, MovieDTO.class);
-        Dataset<Row> ratings = spark.createDataFrame(ratingsRDD, RatingDTO.class);
+        Dataset<Row> moviesDataset = spark.createDataFrame(moviesRDD, MovieDTO.class);
+        Dataset<Row> ratingsDataset = spark.createDataFrame(ratingsRDD, RatingDTO.class);
 
-        Dataset<Row> decemberRatings = ratings.filter(ratings.col("month").equalTo(12));
+        Dataset<Row> decemberRatings = ratingsDataset.filter(ratingsDataset.col("month").equalTo(12));
 
-        Dataset<Row> mostRatedOnDecember = movies.join(decemberRatings, movies.col("movieId").equalTo(decemberRatings.col("movieId")))
-                .groupBy(decemberRatings.col("movieId"), movies.col("title"))
+        Dataset<Row> mostRatedOnDecember = moviesDataset.join(decemberRatings, moviesDataset.col("movieId").equalTo(decemberRatings.col("movieId")))
+                .groupBy(decemberRatings.col("movieId"), moviesDataset.col("title"))
                 .agg(count(decemberRatings.col("rating")))
                 .orderBy(col("count(rating)").desc())
-                .select("title");
+                .select("title", "count(rating)");
 
         mostRatedOnDecember.write().format("json").save(outputPath);
 
