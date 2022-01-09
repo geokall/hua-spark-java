@@ -14,12 +14,6 @@ public class MovieDTO implements Serializable {
     public MovieDTO() {
     }
 
-    public MovieDTO(Integer movieId, String title, String genres) {
-        this.movieId = movieId;
-        this.title = title;
-        this.genres = genres;
-    }
-
     public Integer getMovieId() {
         return movieId;
     }

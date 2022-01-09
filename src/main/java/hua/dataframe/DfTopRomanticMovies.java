@@ -2,13 +2,11 @@ package hua.dataframe;
 
 import hua.dto.MovieDTO;
 import hua.dto.RatingDTO;
-import org.apache.commons.io.FileUtils;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 
-import java.io.File;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.TimeZone;

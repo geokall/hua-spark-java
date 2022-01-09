@@ -12,6 +12,9 @@ public class RatingDTO implements Serializable {
 
     private Integer month;
 
+    public RatingDTO() {
+    }
+
     public Integer getUserId() {
         return userId;
     }

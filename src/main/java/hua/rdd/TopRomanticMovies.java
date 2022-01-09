@@ -9,7 +9,6 @@ import scala.Tuple2;
 import java.time.*;
 import java.util.*;
 
-
 public class TopRomanticMovies {
 
     private static final String ROMANCE_GENRE = "Romance";
@@ -23,7 +22,6 @@ public class TopRomanticMovies {
 
         SparkConf sparkConf = new SparkConf();
         sparkConf.setAppName("TopRomanticMovies");
-        sparkConf.set("spark.sql.session.timeZone", "UTC+2");
 
         JavaSparkContext spark = new JavaSparkContext(sparkConf);
 
