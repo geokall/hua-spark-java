@@ -61,6 +61,12 @@ hadoop/bin/hadoop fs -rm -r "output-folder"
 We did not apply any caching, since every query has its own Class.
 If We had to use every part in one Class, We should have cached the inner join between movieId from movies and ratings dataset.
 
+## TimeZone
+TimeZone it's a must to mention, since HDFS default TimeZone is UTC, <br />
+and the LocalDateTime in our locally system is GMT+2 due to Europe/Athens TimeZone. <br />
+This was causing some different results locally and in HDFS, in the queries that were filtered with December. <br />
+In order to bypass it, we added in the parsing from the dataset to our DTO, the TimeZone as: Europe/Athens
+
 ## Proof it works
 ## Part 1 RDD
 Top 25 most rated movies
