@@ -44,7 +44,7 @@ HDFS filesystem, you don't have to set up our VM.<br />
 ```
 
 ## Explained
-After starting hadoop/sbin and spark/sbin we create 2 folders, <br/ >
+After starting hadoop/sbin and spark/sbin we create 2 folders, <br />
 /movielens/movies/input and /movielens/ratings/input.
 
 These are the movies and ratings dataset in plain text format.<br />
@@ -66,17 +66,17 @@ If We had to use every part in one Class, We should have cached the inner join b
 Top 25 most rated movies
 ![Screenshot](images/spark-part1-1.png)
 
-all comedy movies been rated >= 3
+All comedy movies been rated >= 3
 ![Screenshot](images/spark-part1-2.png)
 
 Top 10 romance movies based on December rating
 ![Screenshot](images/spark-part1-3.png)
 
-##Part 2 Dataframes API
+## Part 2 Dataframes API
 Top 25 most rated movies
 ![Screenshot](images/spark-part2-1.png)
 
-all comedy movies been rated >= 3
+All comedy movies been rated >= 3
 ![Screenshot](images/spark-part2-2.png)
 
 Top 10 romance movies based on December rating
