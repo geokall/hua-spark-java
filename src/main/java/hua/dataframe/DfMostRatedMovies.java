@@ -33,7 +33,7 @@ public class DfMostRatedMovies {
         String inputPath, outputPath;
 
         if (isLocal) {
-            spark = SparkSession.builder().master("local")
+            spark = SparkSession.builder()
                     .appName("Java Spark SQL example")
                     .getOrCreate();
             inputPath = "src/main/resources";
@@ -46,6 +46,7 @@ public class DfMostRatedMovies {
         }
 
         FileUtils.deleteDirectory(new File("output"));
+
 
         JavaRDD<MovieDTO> moviesRDD = spark.read()
                 .textFile(inputPath + "/movies.dat")

@@ -88,6 +88,9 @@ public class DfTopRomanticMovies {
         Dataset<Row> romanceMovies = movies.filter(movies.col("genres").like("%Romance%"));
         Dataset<Row> decemberRatings = ratings.filter(ratings.col("month").equalTo(12));
 
+        System.out.println("c1:" + romanceMovies.count());
+        System.out.println("c2:" + decemberRatings.count());
+
         Dataset<Row> topRomanticMoviesBasedOnDecemberRating = romanceMovies
                 .join(decemberRatings, romanceMovies.col("movieId").equalTo(decemberRatings.col("movieId")))
                 .groupBy(decemberRatings.col("movieId"), romanceMovies.col("title"))

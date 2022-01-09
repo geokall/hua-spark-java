@@ -92,6 +92,8 @@ public class DfGoodComedyMovies {
                 .join(goodRatings, comedyMovies.col("movieId").equalTo(goodRatings.col("movieId")))
                 .select("title").distinct();
 
+        System.out.println("count:" + goodComedyMovies.count());
+
         goodComedyMovies.write().format("json").save(outputPath);
 
         spark.close();

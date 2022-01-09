@@ -1,42 +1,29 @@
 package hua.rdd;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import scala.Tuple2;
 
-import java.io.File;
 import java.util.Collections;
 
 public class MostRatedMovies {
 
     public static void main(String[] args) throws Exception {
 
-        boolean isLocal = false;
-
-        if (args.length == 0) {
-            isLocal = true;
-        } else if (args.length < 2) {
-            System.out.println("Usage: Example input-path output-path");
-            System.exit(0);
+        if (args.length < 3) {
+            System.err.println("Usage: MostRatedMovies <input-path> <output-path>");
+            System.exit(1);
         }
 
-        String inputPath = "src/main/resources";
-        String outputPath = "output";
-
         SparkConf sparkConf = new SparkConf();
-        sparkConf.setAppName("Example");
-        sparkConf.setMaster("local[4]");
-        sparkConf.set("spark.driver.bindAddress", "127.0.0.1");
+        sparkConf.setAppName("MostRatedMovies");
 
         JavaSparkContext spark = new JavaSparkContext(sparkConf);
 
-        FileUtils.deleteDirectory(new File("output"));
-
-        JavaRDD<String> movies = spark.textFile(inputPath + "/movies.dat");
-        JavaRDD<String> ratings = spark.textFile(inputPath + "/ratings.dat");
+        JavaRDD<String> movies = spark.textFile(args[0]);
+        JavaRDD<String> ratings = spark.textFile(args[1]);
 
         //movieId from rating
         JavaRDD<String> movieIdFromRating = ratings.flatMap(line -> Collections.singletonList(line.split("::")[1]).iterator());
@@ -74,7 +61,7 @@ public class MostRatedMovies {
             return new Tuple2<>("times rated: " + joined._2._1, " movieTitle: " + joined._2._2);
         }).sortByKey(false);
 
-        customMostRatedMovies.saveAsTextFile(outputPath);
+        customMostRatedMovies.saveAsTextFile(args[2]);
 
         spark.stop();
     }

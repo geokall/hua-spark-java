@@ -1,19 +1,10 @@
 package hua.rdd;
 
-import hua.dto.MovieDTO;
-import hua.dto.RatingDTO;
-import org.apache.commons.io.FileUtils;
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.api.java.function.PairFunction;
 import scala.Tuple2;
-
-import java.io.File;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.util.TimeZone;
 
 public class GoodComedyMovies {
 
@@ -21,67 +12,53 @@ public class GoodComedyMovies {
 
     public static void main(String[] args) throws Exception {
 
-        boolean isLocal = false;
-
-        if (args.length == 0) {
-            isLocal = true;
-        } else if (args.length < 2) {
-            System.out.println("Usage: Example input-path output-path");
-            System.exit(0);
+        if (args.length < 3) {
+            System.err.println("Usage: GoodComedyMovies <input-path> <output-path>");
+            System.exit(1);
         }
 
-        String inputPath = "src/main/resources";
-        String outputPath = "output";
-
         SparkConf sparkConf = new SparkConf();
-        sparkConf.setAppName("Example");
-        sparkConf.setMaster("local[4]");
-        sparkConf.set("spark.driver.bindAddress", "127.0.0.1");
+        sparkConf.setAppName("GoodComedyMovies");
 
         JavaSparkContext spark = new JavaSparkContext(sparkConf);
 
-        FileUtils.deleteDirectory(new File("output"));
+        JavaRDD<String> movies = spark.textFile(args[0]);
+        JavaRDD<String> ratings = spark.textFile(args[1]);
 
-        JavaRDD<String> moviesTextFile = spark.textFile(inputPath + "/movies.dat");
-        JavaRDD<String> ratingsTextFile = spark.textFile(inputPath + "/ratings.dat");
-
-        JavaPairRDD<Integer, MovieDTO> movieDTOJavaPairRDD = moviesTextFile.mapToPair((PairFunction<String, Integer, MovieDTO>) s -> {
-            String[] split = s.split("::");
-
-            MovieDTO movieDTO = new MovieDTO();
-            movieDTO.setMovieId(Integer.parseInt(split[0]));
-            movieDTO.setTitle(split[1]);
-            movieDTO.setGenres(split[2]);
-
-            return new Tuple2<>(Integer.parseInt(split[0]), movieDTO);
+        //movieId, genre
+        JavaPairRDD<Integer, String> movieIdAndGenres = movies.mapToPair(line -> {
+            String[] split = line.split("::");
+            return new Tuple2<>(Integer.parseInt(split[0]), split[2]);
         });
 
-        JavaPairRDD<Integer, RatingDTO> ratingDTOJavaPairRDD = ratingsTextFile.mapToPair((PairFunction<String, Integer, RatingDTO>) s -> {
-            String[] split = s.split("::");
+        //movieId, comedy genre
+        JavaPairRDD<Integer, String> movieIdAndComedyGenre = movieIdAndGenres.filter(x -> x._2.contains(COMEDY_GENRE));
 
-            RatingDTO ratingDTO = new RatingDTO();
-            ratingDTO.setUserId(Integer.parseInt(split[0]));
-            ratingDTO.setMovieId(Integer.parseInt(split[1]));
-            ratingDTO.setRating(Double.parseDouble(split[2]));
-
-            //long timeStamp to LocalDateTime in order to get December Month
-            LocalDateTime timeStampAsLDT = LocalDateTime.ofInstant(Instant.ofEpochSecond(Long.parseLong(split[3])),
-                    TimeZone.getDefault().toZoneId());
-
-            ratingDTO.setTimeStampParsed(timeStampAsLDT);
-
-            return new Tuple2<>(Integer.parseInt(split[1]), ratingDTO);
+        //movieId(duplicate), rating
+        JavaPairRDD<Integer, Double> movieIdAndRating = ratings.mapToPair(line -> {
+            String[] split = line.split("::");
+            return new Tuple2<>(Integer.parseInt(split[1]), Double.parseDouble(split[2]));
         });
 
-        JavaPairRDD<Integer, MovieDTO> comedyMovies = movieDTOJavaPairRDD.filter(x -> x._2.getGenres().contains(COMEDY_GENRE));
+        //movieId(duplicate), goodRating
+        JavaPairRDD<Integer, Double> movieIdAndGoodRating = movieIdAndRating.filter(x -> x._2 >= 3);
 
-        JavaPairRDD<Integer, RatingDTO> goodRatings = ratingDTOJavaPairRDD.filter(x -> x._2.getRating() >= 3);
+        //movieId, <genre, rating>
+        JavaPairRDD<Integer, Tuple2<String, Double>> joinBabe = movieIdAndComedyGenre.join(movieIdAndGoodRating);
 
-        JavaPairRDD<Integer, Tuple2<MovieDTO, RatingDTO>> join = comedyMovies.join(goodRatings);
+        JavaRDD<Integer> distinctMovieIds = joinBabe.map(x -> x._1).distinct();
 
-        JavaRDD<String> goodComedyMovies = join.map(x -> x._2._1.getTitle()).distinct();
+        long count = distinctMovieIds.count();
+        int sum = (int) count;
 
-        goodComedyMovies.saveAsTextFile(outputPath);
+        JavaPairRDD<String, Integer> lalakis = distinctMovieIds.mapToPair(x -> {
+            return new Tuple2<>("totalComedyMovies", sum);
+        });
+
+        //tuple return list, so taking the first
+        JavaPairRDD<String, Integer> goodComedyMovies = spark.parallelizePairs(lalakis.take(1));
+
+        goodComedyMovies.saveAsTextFile(args[2]);
 
         spark.stop();
     }
