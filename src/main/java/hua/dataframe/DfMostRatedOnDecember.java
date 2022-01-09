@@ -1,7 +1,7 @@
 package hua.dataframe;
 
 import hua.dto.MovieDTO;
-import hua.dto.RatingWithMonthDTO;
+import hua.dto.RatingDTO;
 import org.apache.commons.io.FileUtils;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.sql.Dataset;
@@ -60,13 +60,13 @@ public class DfMostRatedOnDecember {
                     return movieDTO;
                 });
 
-        JavaRDD<RatingWithMonthDTO> ratingsRDD = spark.read()
+        JavaRDD<RatingDTO> ratingsRDD = spark.read()
                 .textFile(inputPath + "/ratings.dat")
                 .javaRDD()
                 .map(line -> {
                     String[] parts = line.split("::");
 
-                    RatingWithMonthDTO ratingDTO = new RatingWithMonthDTO();
+                    RatingDTO ratingDTO = new RatingDTO();
                     ratingDTO.setUserId(Integer.parseInt(parts[0]));
                     ratingDTO.setMovieId(Integer.parseInt(parts[1]));
                     ratingDTO.setRating(Double.parseDouble(parts[2]));
@@ -82,7 +82,7 @@ public class DfMostRatedOnDecember {
                 });
 
         Dataset<Row> movies = spark.createDataFrame(moviesRDD, MovieDTO.class);
-        Dataset<Row> ratings = spark.createDataFrame(ratingsRDD, RatingWithMonthDTO.class);
+        Dataset<Row> ratings = spark.createDataFrame(ratingsRDD, RatingDTO.class);
 
         Dataset<Row> decemberRatings = ratings.filter(ratings.col("month").equalTo(12));
 
