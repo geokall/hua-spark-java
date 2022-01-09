@@ -56,3 +56,42 @@ In case you need to remove an output folder please use, <br />
 ```bash
 hadoop/bin/hadoop fs -rm -r "output-folder"
 ```
+
+## Proof it works
+## Part 1 RDD
+Top 25 most rated movies
+![Screenshot](images/spark-part1-1.png)
+
+all comedy movies been rated >= 3
+![Screenshot](images/spark-part1-2.png)
+
+Top 10 romance movies based on December rating
+![Screenshot](images/spark-part1-3.png)
+
+##Part 2 Dataframes API
+Top 25 most rated movies
+![Screenshot](images/spark-part2-1.png)
+
+all comedy movies been rated >= 3
+![Screenshot](images/spark-part2-2.png)
+
+Top 10 romance movies based on December rating
+![Screenshot](images/spark-part2-3.png)
+
+All movies that most users rated on December
+![Screenshot](images/spark-part2-4.png)
+![Screenshot](images/spark-part2-5.png)
+
+## Credits
+Some links that We'd like to give some credits.
+
+[https://spark.apache.org/docs/latest/sql-data-sources-text.html](https://spark.apache.org/docs/latest/sql-data-sources-text.html)<br />
+[https://spark.apache.org/docs/latest/sql-getting-started.html#creating-datasets](https://spark.apache.org/docs/latest/sql-getting-started.html#creating-datasets)<br />
+[https://spark.apache.org/docs/2.1.0/api/java/org/apache/spark/sql/Dataset.html](https://spark.apache.org/docs/2.1.0/api/java/org/apache/spark/sql/Dataset.html)<br />
+[https://stackoverflow.com/questions/38931892/how-to-read-text-file-and-convert-it-to-a-dataset-in-java-spark](https://stackoverflow.com/questions/38931892/how-to-read-text-file-and-convert-it-to-a-dataset-in-java-spark)<br />
+[https://stackoverflow.com/questions/63572210/how-spark-handles-out-of-memory-error-when-cached-memory-only-persistence-data](https://stackoverflow.com/questions/63572210/how-spark-handles-out-of-memory-error-when-cached-memory-only-persistence-data)<br />
+[https://stackoverflow.com/questions/64035234/can-i-use-java-time-localdate-in-spark-dataframe-udf](https://stackoverflow.com/questions/64035234/can-i-use-java-time-localdate-in-spark-dataframe-udf)<br />
+[https://stackoverflow.com/questions/34409875/how-to-get-other-columns-when-using-spark-dataframe-groupby?rq=1](https://stackoverflow.com/questions/34409875/how-to-get-other-columns-when-using-spark-dataframe-groupby?rq=1)<br />
+[https://stackoverflow.com/questions/41479072/how-to-get-all-columns-after-groupby-on-datasetrow-in-spark-sql-2-1-0/41483738](https://stackoverflow.com/questions/41479072/how-to-get-all-columns-after-groupby-on-datasetrow-in-spark-sql-2-1-0/41483738)<br />
+[https://stackoverflow.com/questions/53852194/join-aggregate-then-select-specific-columns-in-apache-spark](https://stackoverflow.com/questions/53852194/join-aggregate-then-select-specific-columns-in-apache-spark)<br />
+[https://stackoverflow.com/questions/21138751/spark-java-lang-outofmemoryerror-java-heap-space](https://stackoverflow.com/questions/21138751/spark-java-lang-outofmemoryerror-java-heap-space)<br />
