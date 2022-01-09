@@ -51,12 +51,12 @@ public class GoodComedyMovies {
         long count = distinctMovieIds.count();
         int sum = (int) count;
 
-        JavaPairRDD<String, Integer> lalakis = distinctMovieIds.mapToPair(x -> {
+        JavaPairRDD<String, Integer> tupleOfTotalComedyMovies = distinctMovieIds.mapToPair(x -> {
             return new Tuple2<>("totalComedyMovies", sum);
         });
 
         //tuple return list, so taking the first
-        JavaPairRDD<String, Integer> goodComedyMovies = spark.parallelizePairs(lalakis.take(1));
+        JavaPairRDD<String, Integer> goodComedyMovies = spark.parallelizePairs(tupleOfTotalComedyMovies.take(1));
 
         goodComedyMovies.saveAsTextFile(args[2]);
 
