@@ -77,9 +77,7 @@ public class TopRomanticMovies {
         JavaPairRDD<Integer, Tuple2<Double, String>> joined = pairOfMovieIdAndSumRating.join(movieIdAndTitle);
 
         //title, sumRating
-        JavaPairRDD<String, Double> titleSumRating = joined.mapToPair(both -> {
-            return new Tuple2<>(both._2._2, both._2._1);
-        });
+        JavaPairRDD<String, Double> titleSumRating = joined.mapToPair(both -> new Tuple2<>(both._2._2, both._2._1));
 
         //sumRating, title
         JavaPairRDD<Double, String> sumRatingTitle = titleSumRating.mapToPair(Tuple2::swap);

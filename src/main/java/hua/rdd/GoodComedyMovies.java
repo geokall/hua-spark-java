@@ -26,40 +26,45 @@ public class GoodComedyMovies {
         JavaRDD<String> ratings = spark.textFile(args[1]);
 
         //movieId, genre
-        JavaPairRDD<Integer, String> movieIdAndGenres = movies.mapToPair(line -> {
-            String[] split = line.split("::");
-            return new Tuple2<>(Integer.parseInt(split[0]), split[2]);
-        });
-
         //movieId, comedy genre
-        JavaPairRDD<Integer, String> movieIdAndComedyGenre = movieIdAndGenres.filter(x -> x._2.contains(COMEDY_GENRE));
+        JavaPairRDD<Integer, String> movieIdAndComedyGenre = movies
+                .mapToPair(GoodComedyMovies::toMovieIdAndGenre)
+                .filter(x -> x._2.contains(COMEDY_GENRE));
 
         //movieId(duplicate), rating
-        JavaPairRDD<Integer, Double> movieIdAndRating = ratings.mapToPair(line -> {
-            String[] split = line.split("::");
-            return new Tuple2<>(Integer.parseInt(split[1]), Double.parseDouble(split[2]));
-        });
-
         //movieId(duplicate), goodRating
-        JavaPairRDD<Integer, Double> movieIdAndGoodRating = movieIdAndRating.filter(x -> x._2 >= 3);
+        JavaPairRDD<Integer, Double> movieIdAndGoodRating = ratings
+                .mapToPair(GoodComedyMovies::toMovieIdAndRating)
+                .filter(x -> x._2 >= 3);
 
         //movieId, <genre, rating>
-        JavaPairRDD<Integer, Tuple2<String, Double>> joinBabe = movieIdAndComedyGenre.join(movieIdAndGoodRating);
+        JavaPairRDD<Integer, Tuple2<String, Double>> join = movieIdAndComedyGenre.join(movieIdAndGoodRating);
 
-        JavaRDD<Integer> distinctMovieIds = joinBabe.map(x -> x._1).distinct();
+        //distinct movieIds
+        JavaRDD<Integer> distinctMovieIds = join.map(x -> x._1).distinct();
 
         long count = distinctMovieIds.count();
-        int sum = (int) count;
+        int totalComedyMovies = (int) count;
 
-        JavaPairRDD<String, Integer> tupleOfTotalComedyMovies = distinctMovieIds.mapToPair(x -> {
-            return new Tuple2<>("totalComedyMovies", sum);
-        });
+        JavaPairRDD<String, Integer> tupleOfTotalComedyMovies = distinctMovieIds
+                .mapToPair(x -> new Tuple2<>("totalComedyMovies", totalComedyMovies));
 
-        //tuple return list, so taking the first
+        //count does not return javaRDD
         JavaPairRDD<String, Integer> goodComedyMovies = spark.parallelizePairs(tupleOfTotalComedyMovies.take(1));
 
         goodComedyMovies.saveAsTextFile(args[2]);
 
         spark.stop();
+    }
+
+
+    private static Tuple2<Integer, Double> toMovieIdAndRating(String line) {
+        String[] split = line.split("::");
+        return new Tuple2<>(Integer.parseInt(split[1]), Double.parseDouble(split[2]));
+    }
+
+    private static Tuple2<Integer, String> toMovieIdAndGenre(String line) {
+        String[] split = line.split("::");
+        return new Tuple2<>(Integer.parseInt(split[0]), split[2]);
     }
 }
