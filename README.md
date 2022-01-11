@@ -62,7 +62,7 @@ We did not apply any caching, since every query has its own Class.
 If We had to use every part in one Class, We should have cached the inner join between movieId from movies and ratings dataset.
 
 ## TimeZone
-On parsing from long timestamp to LocalDateTime, we use the TimeZone.getDefault() method. <br/ >
+On parsing from long timestamp to LocalDateTime, we use the TimeZone.getDefault() method. <br />
 HDFS default TimeZone is UTC, so we are parsing the date on UTC TimeZone to query the same results.
 
 ## Proof it works
