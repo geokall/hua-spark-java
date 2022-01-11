@@ -7,10 +7,6 @@ import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.util.TimeZone;
-
 import static org.apache.spark.sql.functions.*;
 
 public class DfGoodComedyMovies {
@@ -54,13 +50,6 @@ public class DfGoodComedyMovies {
                     ratingDTO.setUserId(Integer.parseInt(parts[0]));
                     ratingDTO.setMovieId(Integer.parseInt(parts[1]));
                     ratingDTO.setRating(Double.parseDouble(parts[2]));
-
-                    LocalDateTime timeStampAsLDT = LocalDateTime.ofInstant(Instant.ofEpochSecond(Long.parseLong(parts[3])),
-                            TimeZone.getDefault().toZoneId());
-
-                    int month = timeStampAsLDT.getMonth().getValue();
-
-                    ratingDTO.setMonth(month);
 
                     return ratingDTO;
                 });
