@@ -57,7 +57,7 @@ public class DfTopRomanticMovies {
                     ratingDTO.setRating(Double.parseDouble(parts[2]));
 
                     LocalDateTime timeStampAsLDT = LocalDateTime.ofInstant(Instant.ofEpochSecond(Long.parseLong(parts[3])),
-                            TimeZone.getTimeZone("Europe/Athens").toZoneId());
+                            TimeZone.getDefault().toZoneId());
 
                     int month = timeStampAsLDT.getMonth().getValue();
 

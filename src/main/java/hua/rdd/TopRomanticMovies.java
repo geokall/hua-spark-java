@@ -43,10 +43,9 @@ public class TopRomanticMovies {
         JavaRDD<String> decemberRatings = ratings.filter(x -> {
             String[] split = x.split("::");
 
-            //long timeStamp to LocalDateTime in order to get December Month
-            //Europe/Athens because hdfs run in utc, so there were some missing values
+            //running on HDFS default TimeZone is UTC
             LocalDateTime timeStampAsLDT = LocalDateTime.ofInstant(Instant.ofEpochSecond(Long.parseLong(split[3])),
-                    TimeZone.getTimeZone("Europe/Athens").toZoneId());
+                    TimeZone.getDefault().toZoneId());
 
             return timeStampAsLDT.getMonth().getValue() == 12;
         });
