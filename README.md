@@ -49,7 +49,7 @@ After starting hadoop/sbin and spark/sbin we create 2 folders, <br />
 
 These are the movies and ratings dataset in plain text format.<br />
 In the next step we run every main class, passing 3 arguments,<br />
-the first 2 are the movies.dat and ratings.dat and the 3rd argument is the output.
+the first 2 are the movies.dat and ratings.dat and the 3rd argument is the output.<br />
 Then we -cat the out folder, in order to see the results.
 
 In case you need to remove an output folder please use, <br />
@@ -62,10 +62,8 @@ We did not apply any caching, since every query has its own Class.
 If We had to use every part in one Class, We should have cached the inner join between movieId from movies and ratings dataset.
 
 ## TimeZone
-TimeZone it's a must to mention, since HDFS default TimeZone is UTC, <br />
-and the LocalDateTime in our locally system is GMT+2 due to Europe/Athens TimeZone. <br />
-This was causing some different results locally and in HDFS, in the queries that were filtered with December. <br />
-In order to bypass it, we added in the parsing from the dataset to our DTO, the TimeZone as: Europe/Athens
+On parsing from long timestamp to LocalDateTime, we use the TimeZone.getDefault() method. <br/ >
+HDFS default TimeZone is UTC, so we are parsing the date on UTC TimeZone to query the same results.
 
 ## Proof it works
 ## Part 1 RDD
@@ -89,11 +87,11 @@ Top 10 romance movies based on December rating
 ![Screenshot](images/spark-part2-3.png)
 
 All movies that most users rated on December
-![Screenshot](images/spark-part2-4.png)
-![Screenshot](images/spark-part2-5.png)
+![Screenshot](images/spark-part2-4.1.png)
+![Screenshot](images/spark-part2-2.2.png)
 
 ## Credits
-Some links that We'd like to give some credits.
+Sharing some links that We'd like to give credits.
 
 [https://spark.apache.org/docs/latest/sql-data-sources-text.html](https://spark.apache.org/docs/latest/sql-data-sources-text.html)<br />
 [https://spark.apache.org/docs/latest/sql-getting-started.html#creating-datasets](https://spark.apache.org/docs/latest/sql-getting-started.html#creating-datasets)<br />
