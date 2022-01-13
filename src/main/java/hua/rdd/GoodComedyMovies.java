@@ -6,6 +6,8 @@ import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 import scala.Tuple2;
 
+import java.util.Map;
+
 public class GoodComedyMovies {
 
     private static final String COMEDY_GENRE = "Comedy";
@@ -44,13 +46,12 @@ public class GoodComedyMovies {
         JavaRDD<Integer> distinctMovieIds = join.map(x -> x._1).distinct();
 
         long count = distinctMovieIds.count();
-        int totalComedyMovies = (int) count;
 
-        JavaPairRDD<String, Integer> tupleOfTotalComedyMovies = distinctMovieIds
-                .mapToPair(x -> new Tuple2<>("totalComedyMovies", totalComedyMovies));
+        JavaPairRDD<String, Long> tupleOfTotalComedyMovies = distinctMovieIds
+                .mapToPair(x -> new Tuple2<>("totalComedyMovies", count));
 
         //count does not return javaRDD
-        JavaPairRDD<String, Integer> goodComedyMovies = spark.parallelizePairs(tupleOfTotalComedyMovies.take(1));
+        JavaPairRDD<String, Long> goodComedyMovies = spark.parallelizePairs(tupleOfTotalComedyMovies.take(1));
 
         goodComedyMovies.saveAsTextFile(args[2]);
 
