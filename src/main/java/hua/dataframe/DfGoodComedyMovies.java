@@ -70,30 +70,4 @@ public class DfGoodComedyMovies {
 
         spark.close();
     }
-
-//    //Not using it
-//    StructType moviesSchema = new StructType()
-//            .add("movieId", "long")
-//            .add("title", "string")
-//            .add("genres", "string");
-//
-//    StructType ratingsSchema = new StructType()
-//            .add("userId", "long")
-//            .add("movieId", "long")
-//            .add("rating", "double")
-//            .add("timestamp", "long");
-//
-//    Dataset<Row> readingRatings = spark.read()
-//            .option("delimiter", "::")
-//            .schema(ratingsSchema)
-//            .csv(args[1]);
-//
-//    Dataset<Row> moviesDataset = spark.read()
-//            .option("delimiter", "::")
-//            .schema(moviesSchema)
-//            .csv(args[0]);
-//
-//    Dataset<Row> ratingsDataset = readingRatings
-//            .withColumn("month", from_unixtime(readingRatings.col("timestamp"), "MM"))
-//            .drop("timestamp");
 }
