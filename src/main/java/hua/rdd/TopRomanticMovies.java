@@ -76,14 +76,11 @@ public class TopRomanticMovies {
         //to retrieve title information
         JavaPairRDD<Integer, Tuple2<Double, String>> joined = pairOfMovieIdAndSumRating.join(movieIdAndTitle);
 
-        //title, sumRating
-        JavaPairRDD<String, Double> titleSumRating = joined.mapToPair(both -> new Tuple2<>(both._2._2, both._2._1));
-
         //sumRating, title
-        JavaPairRDD<Double, String> sumRatingTitle = titleSumRating.mapToPair(Tuple2::swap);
-
         //DESC order on sumRating
-        JavaPairRDD<Double, String> sortedSumRating = sumRatingTitle.sortByKey(false);
+        JavaPairRDD<Double, String> sortedSumRating = joined.
+                mapToPair(both -> new Tuple2<>(both._2._1, both._2._2))
+                .sortByKey(false);
 
         JavaPairRDD<Double, String> topRomanticMoviesBasedOnDecemberRating = spark.parallelizePairs(sortedSumRating.take(10));
 
