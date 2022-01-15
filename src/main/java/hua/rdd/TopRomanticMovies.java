@@ -16,7 +16,7 @@ public class TopRomanticMovies {
     public static void main(String[] args) throws Exception {
 
         if (args.length < 3) {
-            System.err.println("Usage: TopRomanticMovies <input-path> <output-path>");
+            System.err.println("Usage: TopRomanticMovies <input-path> <input-path> <output-path>");
             System.exit(1);
         }
 
@@ -28,13 +28,11 @@ public class TopRomanticMovies {
         JavaRDD<String> movies = spark.textFile(args[0]);
         JavaRDD<String> ratings = spark.textFile(args[1]);
 
-        //romance
         JavaRDD<String> romanceMovies = movies.filter(x -> {
             String[] split = x.split("::");
             return split[2].contains(ROMANCE_GENRE);
         });
 
-        //movieId, movieTitle
         JavaPairRDD<Integer, String> movieIdAndTitle = romanceMovies.mapToPair(line -> {
             String[] split = line.split("::");
             return new Tuple2<>(Integer.parseInt(split[0]), split[1]);
@@ -43,14 +41,12 @@ public class TopRomanticMovies {
         JavaRDD<String> decemberRatings = ratings.filter(x -> {
             String[] split = x.split("::");
 
-            //running on HDFS default TimeZone is UTC
             LocalDateTime timeStampAsLDT = LocalDateTime.ofInstant(Instant.ofEpochSecond(Long.parseLong(split[3])),
                     TimeZone.getDefault().toZoneId());
 
             return timeStampAsLDT.getMonth().getValue() == 12;
         });
 
-        //movieId(duplicate), rating
         JavaPairRDD<Integer, Double> ratingsMovieIdRating = decemberRatings.mapToPair(line -> {
             String[] split = line.split("::");
 
@@ -59,10 +55,8 @@ public class TopRomanticMovies {
 
         JavaPairRDD<Integer, Tuple2<Double, String>> join = ratingsMovieIdRating.join(movieIdAndTitle);
 
-        //grouped by movieId on rating dataset
         JavaPairRDD<Integer, Iterable<Tuple2<Double, String>>> grouped = join.groupByKey();
 
-        //movieId, sum rating
         JavaPairRDD<Integer, Double> pairOfMovieIdAndSumRating = grouped.mapToPair(group -> {
             double sumRating = 0;
 
@@ -73,11 +67,8 @@ public class TopRomanticMovies {
             return new Tuple2<>(group._1, sumRating);
         });
 
-        //to retrieve title information
         JavaPairRDD<Integer, Tuple2<Double, String>> joined = pairOfMovieIdAndSumRating.join(movieIdAndTitle);
 
-        //sumRating, title
-        //DESC order on sumRating
         JavaPairRDD<Double, String> sortedSumRating = joined.
                 mapToPair(both -> new Tuple2<>(both._2._1, both._2._2))
                 .sortByKey(false);

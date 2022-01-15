@@ -13,7 +13,7 @@ public class GoodComedyMovies {
     public static void main(String[] args) throws Exception {
 
         if (args.length < 3) {
-            System.err.println("Usage: GoodComedyMovies <input-path> <output-path>");
+            System.err.println("Usage: GoodComedyMovies <input-path> <input-path> <output-path>");
             System.exit(1);
         }
 
@@ -25,22 +25,16 @@ public class GoodComedyMovies {
         JavaRDD<String> movies = spark.textFile(args[0]);
         JavaRDD<String> ratings = spark.textFile(args[1]);
 
-        //movieId, genre
-        //movieId, comedy genre
         JavaPairRDD<Integer, String> movieIdAndComedyGenre = movies
                 .mapToPair(GoodComedyMovies::toMovieIdAndGenre)
                 .filter(x -> x._2.contains(COMEDY_GENRE));
 
-        //movieId(duplicate), rating
-        //movieId(duplicate), goodRating
         JavaPairRDD<Integer, Double> movieIdAndGoodRating = ratings
                 .mapToPair(GoodComedyMovies::toMovieIdAndRating)
                 .filter(x -> x._2 >= 3);
 
-        //movieId, <genre, rating>
         JavaPairRDD<Integer, Tuple2<String, Double>> join = movieIdAndComedyGenre.join(movieIdAndGoodRating);
 
-        //distinct movieIds
         JavaRDD<Integer> distinctMovieIds = join.map(x -> x._1).distinct();
 
         long count = distinctMovieIds.count();
@@ -48,7 +42,6 @@ public class GoodComedyMovies {
         JavaPairRDD<String, Long> tupleOfTotalComedyMovies = distinctMovieIds
                 .mapToPair(x -> new Tuple2<>("totalComedyMovies", count));
 
-        //count does not return javaRDD
         JavaPairRDD<String, Long> goodComedyMovies = spark.parallelizePairs(tupleOfTotalComedyMovies.take(1));
 
         goodComedyMovies.saveAsTextFile(args[2]);

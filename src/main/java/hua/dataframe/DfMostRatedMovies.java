@@ -14,7 +14,7 @@ public class DfMostRatedMovies {
     public static void main(String[] args) throws Exception {
 
         if (args.length < 3) {
-            System.out.println("Usage: DfMostRatedMovies input-path output-path");
+            System.out.println("Usage: DfMostRatedMovies input-path input-path output-path");
             System.exit(0);
         }
 

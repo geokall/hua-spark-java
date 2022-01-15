@@ -14,7 +14,7 @@ public class DfGoodComedyMovies {
     public static void main(String[] args) throws Exception {
 
         if (args.length < 3) {
-            System.out.println("Usage: DfGoodComedyMovies input-path output-path");
+            System.out.println("Usage: DfGoodComedyMovies input-path input-path output-path");
             System.exit(0);
         }
 

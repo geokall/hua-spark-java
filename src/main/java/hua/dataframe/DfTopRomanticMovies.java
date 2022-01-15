@@ -18,7 +18,7 @@ public class DfTopRomanticMovies {
     public static void main(String[] args) throws Exception {
 
         if (args.length < 3) {
-            System.out.println("Usage: DfTopRomanticMovies input-path output-path");
+            System.out.println("Usage: DfTopRomanticMovies input-path input-path output-path");
             System.exit(0);
         }
 
@@ -30,7 +30,6 @@ public class DfTopRomanticMovies {
 
         String outputPath = args[2];
 
-        //creating column names based on split
         JavaRDD<MovieDTO> moviesRDD = spark.read()
                 .textFile(movies)
                 .javaRDD()

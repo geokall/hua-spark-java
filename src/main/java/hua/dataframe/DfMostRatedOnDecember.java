@@ -18,7 +18,7 @@ public class DfMostRatedOnDecember {
     public static void main(String[] args) throws Exception {
 
         if (args.length < 3) {
-            System.out.println("Usage: DfMostRatedOnDecember input-path output-path");
+            System.out.println("Usage: DfMostRatedOnDecember input-path input-path output-path");
             System.exit(0);
         }
 
